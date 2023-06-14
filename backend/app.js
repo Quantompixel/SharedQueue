@@ -10,6 +10,8 @@ let db = new sqlite3.Database('./database.db', (err) => {
 
 function createTables(db) {
     db.exec(`
+        drop table if exists user;
+
         create table user
         (
             user_id                 int primary key not null,
@@ -18,6 +20,10 @@ function createTables(db) {
             session_key             text,
             session_key_expiry_date text
         );
+
+        insert into user (user_id, username, password, session_key, session_key_expiry_date)
+        values (1, 'Daniel', '1234', 'asdfasdfads', '253245'),
+               (2, 'Lukas', '1234', 'asdfasdfads', '253245');
     `, () => {
         runQueries(db);
     });
@@ -25,14 +31,12 @@ function createTables(db) {
 
 function runQueries(db) {
     db.all(`
-        select hero_name, is_xman, was_snapped
-        from hero h
-                 inner join hero_power hp on h.hero_id = hp.hero_id
-        where hero_power = ?`, "Total Nerd", (err, rows) => {
+        select username, password
+        from user u
+    `, (err, rows) => {
         rows.forEach(row => {
-            console.log(row.hero_name + "\t" +
-                row.is_xman + "\t" +
-                row.was_snapped);
+            console.log(row.username + "\t" +
+                row.password);
         });
     });
 }
