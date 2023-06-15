@@ -5,29 +5,36 @@ const {connectToDatabase} = require('../database');
 const db = connectToDatabase();
 
 function getAll() {
-    let users = [];
+    return new Promise((resolve, reject) => {
+        let users = [];
 
-    db.all(`
-        select user_id, username, password, session_key, session_key_expiry_date
-        from user u
-    `, (err, rows) => {
-        for (let row of rows) {
-            // console.log(row);
-            users.push(
-                new User(
-                    row.user_id,
-                    row.username,
-                    row.password,
-                    row.session_key,
-                    row.session_key_expiry_date
-                )
-            );
-        }
+        db.all(
+            `
+                SELECT user_id, username, password, session_key, session_key_expiry_date
+                FROM user u
+            `,
+            (err, rows) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
 
-        return users;
+                for (let row of rows) {
+                    users.push(
+                        new User(
+                            row.user_id,
+                            row.username,
+                            row.password,
+                            row.session_key,
+                            row.session_key_expiry_date
+                        )
+                    );
+                }
+
+                resolve(users);
+            }
+        );
     });
-
-    return null;
 }
 
 module.exports = {
