@@ -4,15 +4,32 @@ const {connectToDatabase} = require('../database');
 // Call the connectToDatabase function to establish the connection
 const db = connectToDatabase();
 
+function updateSessionKeyForUser(sessionKey, expiryDateTime, username) {
+    let data = [sessionKey, expiryDateTime, username];
+    let sql = `
+        UPDATE user
+        SET session_key = ?, session_key_expiry_date = ?
+        where username = ?
+    `;
+
+    getByUsername(username)
+        .then(() => {
+            db.run(sql, data, (err) => {
+                if (err) {
+                    return console.error(err);
+                }
+            })
+
+        })
+}
+
 function getByUsername(username) {
     return new Promise((resolve, reject) => {
         getAll()
             .then(users => {
                 for (let user of users) {
                     if (user.username === username) {
-                        // console.log(user);
                         resolve(user);
-                        // return user;
                     }
                 }
             })
@@ -56,6 +73,6 @@ function getAll() {
 }
 
 module.exports = {
-    getAll,
-    getByUsername
+    getByUsername,
+    updateSessionKeyForUser
 }
