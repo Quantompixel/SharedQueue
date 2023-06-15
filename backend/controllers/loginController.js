@@ -5,8 +5,6 @@ const ApiError = require('../apiError');
 const sessionKeyExpiryDuration = process.env.SESSION_KEY_EXPIRY_DURATION;
 
 const loginRequest = (req, res, next) => {
-    console.log(process.env.SESSION_KEY_EXPIRY_DURATION);
-
     try {
         if (!req.body.username && !req.body.password) {
             throw new ApiError("Password and username not defined", 400);
@@ -33,9 +31,11 @@ const loginRequest = (req, res, next) => {
                         expiryDateTime: expiryDateTime
                     });
                 } else {
-                    res.json("not logged in");
+                    throw new ApiError("Login credentials are incorrect", 401);
                 }
-            });
+            }).catch((err) => {
+                next(err);
+        });
     } catch (err) {
         next(err);
     }
