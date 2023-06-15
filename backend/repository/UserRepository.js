@@ -4,6 +4,24 @@ const {connectToDatabase} = require('../database');
 // Call the connectToDatabase function to establish the connection
 const db = connectToDatabase();
 
+function getByUsername(username) {
+    return new Promise((resolve, reject) => {
+        getAll()
+            .then(users => {
+                for (let user of users) {
+                    if (user.username === username) {
+                        // console.log(user);
+                        resolve(user);
+                        // return user;
+                    }
+                }
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
+}
+
 function getAll() {
     return new Promise((resolve, reject) => {
         let users = [];
@@ -38,5 +56,6 @@ function getAll() {
 }
 
 module.exports = {
-    getAll
+    getAll,
+    getByUsername
 }

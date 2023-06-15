@@ -1,8 +1,10 @@
 const express = require('express');
 const app = express();
-const { connectToDatabase } = require('./database');
+const { createTables, connectToDatabase } = require('./database');
 
 const db = connectToDatabase();
+
+createTables();
 
 app.use(express.json());
 

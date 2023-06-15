@@ -5,8 +5,6 @@ class User {
         this.password = password;
         this.sessionKey = sessionKey;
         this.sessionKeyExpiryDate = sessionKeyExpiryDate;
-
-        console.log(this.userId);
     }
 }
 
