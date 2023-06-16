@@ -16,7 +16,7 @@ app.use(express.json());
 app.use('/', require('./routes/login'));
 
 // Middleware
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
     res.status(err.httpStatusCode);
     res.json({
         error: err.message,

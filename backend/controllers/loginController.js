@@ -34,7 +34,7 @@ const loginRequest = (req, res, next) => {
                     throw new ApiError("Login credentials are incorrect", 401);
                 }
             }).catch((err) => {
-                next(err);
+                next(new ApiError(err.message, 500));
         });
     } catch (err) {
         next(err);
