@@ -41,18 +41,18 @@ let wsClients = [];
 wss.on('connection', (ws, req) => {
     const sessionKey = url.parse(req.url, true).query.session_key;
 
-    userRepository.getUserBySessionKey(sessionKey)
+    userRepository.verifySessionKey(sessionKey)
         .then(() => {
             wsClients[sessionKey] = ws;
         })
         .catch(() => ws.close());
 
-    // Handle the WebSocket `message` event. If any of the clients has a token
+    // Handle the WebSocket `message` event. If any of the clients has a session key
     // that is no longer valid, send an error message and close the client's
     // connection.
     ws.on('message', (data) => {
         for (const [sessionKey, client] of Object.entries(wsClients)) {
-            userRepository.getUserBySessionKey(sessionKey)
+            userRepository.verifySessionKey(sessionKey)
                 .then(user => {
                     client.send("Hallo " + user.username + "!");
                     client.send(data);

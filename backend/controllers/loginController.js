@@ -46,11 +46,11 @@ function generateExpiryDateTimeString() {
 }
 
 function generateSessionKey(length = 24) {
-    const pool = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const pool = 'abcdefghijklmnopqrstuvwxyz0123456789_';
     let sessionKey = "";
 
     for (let i = 0; i < length; i++) {
-        let random = Math.floor(Math.random() * pool.length) + 1;
+        let random = Math.floor(Math.random() * pool.length);
         sessionKey += pool[random];
     }
 

@@ -32,6 +32,8 @@ function getByUsername(username) {
                         resolve(user);
                     }
                 }
+
+                reject(new Error("No user found with that username"));
             })
             .catch(error => {
                 reject(error);
@@ -39,13 +41,17 @@ function getByUsername(username) {
     });
 }
 
-function getUserBySessionKey(sessionKey) {
+function verifySessionKey(sessionKey) {
     return new Promise((resolve, reject) => {
         getAll()
             .then(users => {
                 for (let user of users) {
-                    if (user.sessionKey === sessionKey) {
-                        resolve(user);
+                    if (user.sessionKey === sessionKey ) {
+                        if (isValid(user.sessionKeyExpiryDate)) {
+                            resolve(user);
+                        } else {
+                           reject(new Error("Session key has expired"));
+                        }
                     }
                 }
 
@@ -90,8 +96,12 @@ function getAll() {
     });
 }
 
+function isValid(expiryDate) {
+    return new Date(expiryDate).getTime() > Date.now();
+}
+
 module.exports = {
     getByUsername,
-    getUserBySessionKey,
+    verifySessionKey,
     updateSessionKeyForUser
 }

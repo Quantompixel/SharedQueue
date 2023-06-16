@@ -25,8 +25,8 @@ function createTables() {
             session_key_expiry_date text
         );
         insert into user (user_id, username, password, session_key, session_key_expiry_date)
-        values (1, 'Daniel', '2345', 'nUx8Mhuw3Q4hJSQL4pPCIY66', '2023-06-15T18:26:01.815Z'),
-               (2, 'Lukas', '1234', 'GBFpxrb48KxTeQKYTPAXOz3D', '2023-06-15T18:27:07.836Z');
+        values (1, 'Daniel', '2345', 'dg6sf8_3s0ywjdtrqhu283hk', '2023-07-15T18:26:01.815Z'),
+               (2, 'Lukas', '1234', 'jm92zesn5aolbg_p8u9tb26w', '2023-07-15T18:27:07.836Z');
     `);
 }
 
