@@ -39,6 +39,24 @@ function getByUsername(username) {
     });
 }
 
+function getUserBySessionKey(sessionKey) {
+    return new Promise((resolve, reject) => {
+        getAll()
+            .then(users => {
+                for (let user of users) {
+                    if (user.sessionKey === sessionKey) {
+                        resolve(user);
+                    }
+                }
+
+                reject(new Error("No user with that session key"));
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
+}
+
 function getAll() {
     return new Promise((resolve, reject) => {
         let users = [];
@@ -74,5 +92,6 @@ function getAll() {
 
 module.exports = {
     getByUsername,
+    getUserBySessionKey,
     updateSessionKeyForUser
 }

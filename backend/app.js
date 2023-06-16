@@ -1,7 +1,10 @@
 const express = require('express');
-const ws = require('ws');
+const WebSocket = require('ws');
+const url = require('url');
 const app = express();
-const { createTables, connectToDatabase } = require('./database');
+require('dotenv').config()
+const {createTables, connectToDatabase} = require('./database');
+const userRepository = require('./repository/userRepository');
 
 const db = connectToDatabase();
 
@@ -13,7 +16,7 @@ app.use(express.json());
 app.use('/', require('./routes/login'));
 
 // Middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     res.status(err.httpStatusCode);
     res.json({
         error: err.message,
@@ -21,17 +24,44 @@ app.use((err, req, res, next) => {
     });
 });
 
-const wsServer = new ws.Server({ noServer: true });
-wsServer.on('connection', socket => {
-    socket.on('message', message => console.log(message));
-});
+const server = app.listen(process.env.PORT, () => console.log("Server has started at port 4111"))
 
-const server = app.listen(4111, () => console.log("Server has started at port 4111"))
+// const wss = new WebSocket.Server({server: server, path: '/ws'});
+const wss = new WebSocket.Server({noServer: true});
 
 // WebSocket server runs on the same port as the express server
 server.on('upgrade', (request, socket, head) => {
-    wsServer.handleUpgrade(request, socket, head, socket => {
-        wsServer.emit('connection', socket, request);
+    wss.handleUpgrade(request, socket, head, socket => {
+        wss.emit('connection', socket, request);
+    });
+});
+
+let wsClients = [];
+
+wss.on('connection', (ws, req) => {
+    const sessionKey = url.parse(req.url, true).query.session_key;
+
+    userRepository.getUserBySessionKey(sessionKey)
+        .then(() => {
+            wsClients[sessionKey] = ws;
+        })
+        .catch(() => ws.close());
+
+    // Handle the WebSocket `message` event. If any of the clients has a token
+    // that is no longer valid, send an error message and close the client's
+    // connection.
+    ws.on('message', (data) => {
+        for (const [sessionKey, client] of Object.entries(wsClients)) {
+            userRepository.getUserBySessionKey(sessionKey)
+                .then(user => {
+                    client.send("Hallo " + user.username + "!");
+                    client.send(data);
+                })
+                .catch(() => {
+                    client.send("Error: Your token is no longer valid. Please reauthenticate.");
+                    client.close();
+                });
+        }
     });
 });
 
