@@ -7,7 +7,6 @@ function connectToDatabase() {
         if (err) {
             console.error(err.message);
         }
-        console.log('Connected to the database.');
     });
 
     return db;

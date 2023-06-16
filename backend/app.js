@@ -24,7 +24,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-const server = app.listen(process.env.PORT, () => console.log("Server has started at port 4111"))
+const server = app.listen(process.env.PORT, () => console.log("Server has started at " + process.env.PORT))
 
 // const wss = new WebSocket.Server({server: server, path: '/ws'});
 const wss = new WebSocket.Server({noServer: true});
@@ -36,22 +36,21 @@ server.on('upgrade', (request, socket, head) => {
     });
 });
 
-let wsClients = [];
+let clients = [];
 
 wss.on('connection', (ws, req) => {
     const sessionKey = url.parse(req.url, true).query.session_key;
 
     userRepository.verifySessionKey(sessionKey)
         .then(() => {
-            wsClients[sessionKey] = ws;
+            console.log("Client " + sessionKey + " connected.");
+            clients[sessionKey] = ws;
         })
         .catch(() => ws.close());
 
-    // Handle the WebSocket `message` event. If any of the clients has a session key
-    // that is no longer valid, send an error message and close the client's
-    // connection.
+    // fires if client sends message, checks if session key is valid and responds
     ws.on('message', (data) => {
-        for (const [sessionKey, client] of Object.entries(wsClients)) {
+        for (const [sessionKey, client] of Object.entries(clients)) {
             userRepository.verifySessionKey(sessionKey)
                 .then(user => {
                     client.send("Hallo " + user.username + "!");
@@ -62,6 +61,12 @@ wss.on('connection', (ws, req) => {
                     client.close();
                 });
         }
+    });
+
+    // When a socket closes, or disconnects, remove it from the array.
+    ws.on('close', () => {
+        delete clients[sessionKey];
+        console.log("Client " + sessionKey + " disconnected.");
     });
 });
 
