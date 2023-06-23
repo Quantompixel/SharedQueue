@@ -5,6 +5,7 @@ const app = express();
 require('dotenv').config()
 const {createTables, connectToDatabase} = require('./database');
 const userRepository = require('./repository/userRepository');
+const {reorderRequest} = require('./controllers/reorderController');
 
 const db = connectToDatabase();
 
@@ -53,8 +54,32 @@ wss.on('connection', (ws, req) => {
         for (const [sessionKey, client] of Object.entries(clients)) {
             userRepository.verifySessionKey(sessionKey)
                 .then(user => {
-                    client.send("Hallo " + user.username + "!");
-                    client.send(data);
+                    try {
+                        const message = JSON.parse(data.toString());
+
+                        if (!Object.keys(message).includes("command") || !Object.keys(message).includes("params")) {
+                            throw new Error("wrong format");
+                        }
+
+                        const params = message["params"];
+
+                        /*
+                        {
+                            "command": "reorder",
+                            "params": {
+                                "song": 10,
+                                "reference": 11,
+                                "before": false
+                            }
+                        }
+                         */
+                        if (message["command"] === "reorder") {
+                            let updatedQueue = reorderRequest(params.song, params.reference, params.before);
+                            client.send(JSON.stringify(updatedQueue));
+                        }
+                    } catch (err) {
+                        client.send("Error: Commands have to be in the right JSON-format.");
+                    }
                 })
                 .catch(() => {
                     client.send("Error: Your token is no longer valid. Please reauthenticate.");
