@@ -2,6 +2,7 @@ const express = require('express');
 const WebSocket = require('ws');
 const url = require('url');
 const app = express();
+const cors = require('cors');
 require('dotenv').config()
 const {createTables, connectToDatabase} = require('./database');
 const userRepository = require('./repository/userRepository');
@@ -10,6 +11,8 @@ const {reorderRequest} = require('./controllers/reorderController');
 const db = connectToDatabase();
 
 createTables();
+
+app.use(cors());
 
 app.use(express.json());
 
