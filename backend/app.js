@@ -85,6 +85,13 @@ wss.on('connection', (ws, req) => {
                 }
 
                 ws.send(JSON.stringify(messageData));
+
+                // update all clients
+
+                broadcast(JSON.stringify({
+                    type: "update",
+                    data: updatedQueue
+                }))
             }
             if (message["command"] === "getQueue") {
                 const messageData = {
@@ -103,6 +110,19 @@ wss.on('connection', (ws, req) => {
         delete clients[ws.sessionKey];
         console.log("Client " + ws.sessionKey + " disconnected.");
     });
+
+    function broadcast(message) {
+        for (const [sessionKey, client] of Object.entries(clients)) {
+            userRepository.verifySessionKey(sessionKey)
+                .then(user => {
+                    client.send(message);
+                })
+                .catch(() => {
+                    client.send("Error: Your token is no longer valid. Please reauthenticate.");
+                    client.close();
+                });
+        }
+    }
 });
 
 module.exports = db;

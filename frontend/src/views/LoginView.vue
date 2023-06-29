@@ -43,7 +43,7 @@ export default {
       }
 
       let data = await response.json();
-      localStorage.setItem("sessionKey", data.sessionKey);
+      sessionStorage.setItem("sessionKey", data.sessionKey);
       await router.push("/main");
     }
   }
