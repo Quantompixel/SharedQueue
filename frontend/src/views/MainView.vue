@@ -26,7 +26,7 @@
 
             <div class="content">{{ element.title }}</div>
 
-            <div class="close" @click="removeAt(index)">
+            <div class="close" @click="removeAt(index, element.id)">
               <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48">
                 <path
                     d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/>
@@ -68,8 +68,9 @@ export default {
     updateDraggedElementID(id) {
       this.draggedElementID = id;
     },
-    removeAt(idx) {
+    removeAt(idx, id) {
       this.list.splice(idx, 1);
+      this.removeRequest(id);
     },
     add: function () {
       id++;
@@ -77,6 +78,16 @@ export default {
     },
     endDrag() {
       this.reorderRequest()
+    },
+    removeRequest(id) {
+      const messageData = {
+        command: "remove",
+        params: {
+          id: id
+        }
+      };
+
+      this.socket.send(JSON.stringify(messageData));
     },
     reorderRequest() {
       for (let [index, item] of this.list.entries()) {

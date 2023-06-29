@@ -54,11 +54,22 @@ const reorderRequest = (song, reference, before) => {
     return newQueue;
 }
 
+const removeRequest = (id) => {
+    if (id < -1) {
+        return queue;
+    }
+
+    queue = queue.filter(elem => elem.id !== id);
+
+    return queue;
+}
+
 const getQueueRequest = () => {
    return queue;
 }
 
 module.exports = {
     reorderRequest,
-    getQueueRequest
+    getQueueRequest,
+    removeRequest
 };

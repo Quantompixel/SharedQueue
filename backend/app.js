@@ -6,7 +6,7 @@ const cors = require('cors');
 require('dotenv').config()
 const {createTables, connectToDatabase} = require('./database');
 const userRepository = require('./repository/userRepository');
-const {reorderRequest, getQueueRequest} = require('./controllers/reorderController');
+const {reorderRequest, getQueueRequest, removeRequest} = require('./controllers/reorderController');
 
 const db = connectToDatabase();
 
@@ -91,7 +91,7 @@ wss.on('connection', (ws, req) => {
                 broadcast(JSON.stringify({
                     type: "update",
                     data: updatedQueue
-                }))
+                }));
             }
             if (message["command"] === "getQueue") {
                 const messageData = {
@@ -100,6 +100,24 @@ wss.on('connection', (ws, req) => {
                     data: getQueueRequest()
                 }
                 ws.send(JSON.stringify(messageData));
+            }
+            if (message["command"] === "remove") {
+                let updatedQueue = removeRequest(params.id);
+
+                const messageData = {
+                    type: "response",
+                    command: "remove",
+                    data: updatedQueue
+                };
+
+                ws.send(JSON.stringify(messageData));
+
+                // update all clients
+
+                broadcast(JSON.stringify({
+                    type: "update",
+                    data: updatedQueue
+                }));
             }
         } catch (err) {
             ws.send("Error: Commands have to be in the right JSON format.");
