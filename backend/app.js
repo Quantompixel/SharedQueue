@@ -6,7 +6,7 @@ const cors = require('cors');
 require('dotenv').config()
 const {createTables, connectToDatabase} = require('./database');
 const userRepository = require('./repository/userRepository');
-const {reorderRequest} = require('./controllers/reorderController');
+const {reorderRequest, getQueueRequest} = require('./controllers/reorderController');
 
 const db = connectToDatabase();
 
@@ -49,52 +49,59 @@ wss.on('connection', (ws, req) => {
         .then(() => {
             console.log("Client " + sessionKey + " connected.");
             clients[sessionKey] = ws;
+
+            // Store the sessionKey as a property on the WebSocket object
+            ws.sessionKey = sessionKey;
         })
         .catch(() => ws.close());
 
-    // fires if client sends message, checks if session key is valid and responds
     ws.on('message', (data) => {
-        for (const [sessionKey, client] of Object.entries(clients)) {
-            userRepository.verifySessionKey(sessionKey)
-                .then(user => {
-                    try {
-                        const message = JSON.parse(data.toString());
+        try {
+            const message = JSON.parse(data.toString());
 
-                        if (!Object.keys(message).includes("command") || !Object.keys(message).includes("params")) {
-                            throw new Error("wrong format");
-                        }
+            if (!Object.keys(message).includes("command")) {
+                throw new Error("wrong format");
+            }
 
-                        const params = message["params"];
+            const params = message["params"];
 
-                        /*
-                        {
-                            "command": "reorder",
-                            "params": {
-                                "song": 10,
-                                "reference": 11,
-                                "before": false
-                            }
-                        }
-                         */
-                        if (message["command"] === "reorder") {
-                            let updatedQueue = reorderRequest(params.song, params.reference, params.before);
-                            client.send(JSON.stringify(updatedQueue));
-                        }
-                    } catch (err) {
-                        client.send("Error: Commands have to be in the right JSON-format.");
-                    }
-                })
-                .catch(() => {
-                    client.send("Error: Your token is no longer valid. Please reauthenticate.");
-                    client.close();
-                });
+            /*
+            {
+                "command": "reorder",
+                "params": {
+                    "song": 10,
+                    "reference": 11,
+                    "before": false
+                }
+            }
+             */
+            if (message["command"] === "reorder") {
+                let updatedQueue = reorderRequest(params.song, params.reference, params.before);
+
+                const messageData = {
+                    type: "response",
+                    command: "reorder",
+                    data: updatedQueue
+                }
+
+                ws.send(JSON.stringify(messageData));
+            }
+            if (message["command"] === "getQueue") {
+                const messageData = {
+                    type: "response",
+                    command: "getQueue",
+                    data: getQueueRequest()
+                }
+                ws.send(JSON.stringify(messageData));
+            }
+        } catch (err) {
+            ws.send("Error: Commands have to be in the right JSON format.");
         }
     });
 
-    // When a socket closes, or disconnects, remove it from the array.
     ws.on('close', () => {
-        delete clients[sessionKey];
-        console.log("Client " + sessionKey + " disconnected.");
+        delete clients[ws.sessionKey];
+        console.log("Client " + ws.sessionKey + " disconnected.");
     });
 });
 
