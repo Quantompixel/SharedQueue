@@ -1,4 +1,4 @@
-const queue = [
+let queue = [
     {
         id: 1,
         title: "First Song"
@@ -25,31 +25,40 @@ const reorderRequest = (song, reference, before) => {
     let songToReorder;
     let referenceIndex;
 
-    for (let [index, entry] of queue.entries()) {
+    for (let entry of queue) {
         if (entry.id === song) {
            songToReorder = entry;
         }
-
-        if (entry.id === reference) {
-            referenceIndex = index;
-        }
     }
 
-    if (!songToReorder || !referenceIndex) {
+    if (!songToReorder) {
         return queue;
     }
 
     let newQueue = queue.filter(elem => elem.id !== song);
 
-    if (before) {
-        newQueue.splice(referenceIndex - 1, 0, songToReorder);
-    } else {
-        newQueue.splice(referenceIndex, 0, songToReorder);
+    for (let [index, entry] of newQueue.entries()) {
+        if (entry.id === reference) {
+            referenceIndex = index;
+        }
     }
+
+    if (before) {
+        newQueue.splice(referenceIndex, 0, songToReorder);
+    } else {
+        newQueue.splice(referenceIndex + 1, 0, songToReorder);
+    }
+
+    queue = newQueue;
 
     return newQueue;
 }
 
+const getQueueRequest = () => {
+   return queue;
+}
+
 module.exports = {
-    reorderRequest
+    reorderRequest,
+    getQueueRequest
 };
